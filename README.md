@@ -13,7 +13,7 @@ The project starts from the fundamental architecture of an agent rather than fro
 
 An executable version of the project is available on Kaggle:
 
-### [Open Building an AI Agent on Kaggle](https://www.kaggle.com/code/lucalullo/building-ai-agent)
+### [Open Building AI Agent on Kaggle](https://www.kaggle.com/code/lucalullo/building-ai-agent)
 
 ## Current capabilities
 
