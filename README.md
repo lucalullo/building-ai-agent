@@ -37,7 +37,7 @@ The included tools support greetings and basic arithmetic operations such as add
 | Version 2 | Dedicated Executor | [`v02-executor`](v02-executor/) |
 | Version 3 | Generic Parser | [`v03-generic-parser`](v03-generic-parser/) |
 
-## Version 1 — Base Agent
+## Version 1 - Base Agent
 
 The first version introduces the complete basic agent flow:
 
@@ -59,7 +59,7 @@ Open the folder:
 
 [`v01-agent-base`](v01-agent-base/)
 
-## Version 2 — Executor
+## Version 2 - Executor
 
 The second version introduces a dedicated Executor component:
 
@@ -81,7 +81,7 @@ Open the folder:
 
 [`v02-executor`](v02-executor/)
 
-## Version 3 — Generic Parser
+## Version 3 - Generic Parser
 
 The third version introduces a generic parsing mechanism based on the parameters required by each tool.
 
