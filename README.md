@@ -100,8 +100,8 @@ Open the folder:
 
 The repository includes a complete general report in Italian and English:
 
-- [Project report — English](project-report-en.pdf)
-- [Relazione del progetto — Italiano](project-report-it.pdf)
+- [Project report - English](project-report-en.pdf)
+- [Relazione del progetto - Italiano](project-report-it.pdf)
 
 Each version folder also contains:
 
