@@ -5,9 +5,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 ![Jupyter Notebook](https://img.shields.io/badge/Jupyter-Notebook-F37626?logo=jupyter&logoColor=white)
 
-A progressive educational project that shows how to build an AI agent step by step.
+A progressive educational project that shows how to build an AI agent step by step, from scratch, using pure Python.
 
-The project starts from the fundamental architecture of an agent rather than from an external agent framework. Each version introduces a new concept, making routing, parsing, tool execution and memory easier to understand.
+The project does not use an external LLM or an agent framework. Each version introduces one new architectural concept, making routing, planning, parsing, tool execution and memory easier to understand.
 
 ## Online notebook
 
@@ -21,13 +21,52 @@ The current agent can:
 
 - receive a natural-language request;
 - identify the user's intent;
-- select an appropriate tool;
-- extract the required arguments;
-- validate the arguments;
+- select the most appropriate tool;
+- create a simple execution plan;
+- explain why the selected tool should be used;
+- determine which arguments are required;
+- extract and validate the arguments;
 - execute the selected tool;
-- store the interaction state in memory.
+- handle unsupported requests safely;
+- store the request, plan, action, arguments and result in memory.
 
-The included tools support greetings and basic arithmetic operations such as addition, subtraction, multiplication, division and exponentiation.
+The included tools support greetings and basic arithmetic operations:
+
+- addition;
+- subtraction;
+- multiplication;
+- division;
+- exponentiation.
+
+## Current architecture
+
+```text
+User Request
+      ↓
+    Router
+      ↓
+   Planner
+      ↓
+Generic Parser
+      ↓
+   Executor
+      ↓
+    Memory
+      ↓
+    Output
+```
+
+The Planner creates an intermediate execution plan before parsing and execution.
+
+Example:
+
+```python
+{
+    "tool": "addition",
+    "reason": "Add two numbers.",
+    "needs_arguments": ["a", "b"]
+}
+```
 
 ## Project versions
 
@@ -36,19 +75,20 @@ The included tools support greetings and basic arithmetic operations such as add
 | Version 1 | Base Agent | [`v01-agent-base`](v01-agent-base/) |
 | Version 2 | Dedicated Executor | [`v02-executor`](v02-executor/) |
 | Version 3 | Generic Parser | [`v03-generic-parser`](v03-generic-parser/) |
+| Version 4 | Planner | [`v04-planner`](v04-planner/) |
 
 ## Version 1 - Base Agent
 
 The first version introduces the complete basic agent flow:
 
 ```text
-User request
+User Request
       ↓
     Router
       ↓
     Parser
       ↓
-Tool execution
+Tool Execution
       ↓
     Memory
 ```
@@ -64,7 +104,7 @@ Open the folder:
 The second version introduces a dedicated Executor component:
 
 ```text
-User request
+User Request
       ↓
     Router
       ↓
@@ -95,6 +135,92 @@ This reduces tool-specific conditions inside the Parser and prepares the archite
 Open the folder:
 
 [`v03-generic-parser`](v03-generic-parser/)
+
+## Version 4 - Planner
+
+The fourth version introduces a dedicated Planner component.
+
+The agent no longer moves directly from tool selection to parsing and execution. It first creates a simple execution plan describing:
+
+- the selected tool;
+- the reason for selecting it;
+- the arguments required by the tool.
+
+The complete flow becomes:
+
+```text
+User Request
+      ↓
+    Router
+      ↓
+   Planner
+      ↓
+Generic Parser
+      ↓
+   Executor
+      ↓
+    Memory
+      ↓
+    Output
+```
+
+The Planner is still rule-based and uses the existing Router to identify the most appropriate tool.
+
+If no suitable tool is available, the Planner creates a plan with no selected tool:
+
+```python
+{
+    "tool": None,
+    "reason": "No suitable tool was found for the request.",
+    "needs_arguments": []
+}
+```
+
+The Agent then returns a safe fallback response:
+
+```text
+I cannot handle this request yet.
+```
+
+The agent state now also includes the execution plan:
+
+```python
+{
+    "request": "What is 2 + 3?",
+    "plan": {
+        "tool": "addition",
+        "reason": "Add two numbers.",
+        "needs_arguments": ["a", "b"]
+    },
+    "action": "addition",
+    "arguments": {
+        "a": 2,
+        "b": 3
+    },
+    "result": 5
+}
+```
+
+This makes the internal behavior of the agent more transparent and prepares the architecture for more advanced planning and multi-step execution.
+
+### Version 4 architecture
+
+![Version 4 Planner architecture](v04-planner/Version%204.png)
+
+Open the folder:
+
+[`v04-planner`](v04-planner/)
+
+## Component responsibilities
+
+| Component | Responsibility |
+|---|---|
+| Router | Selects the most appropriate tool |
+| Planner | Creates the execution plan |
+| Generic Parser | Extracts the required arguments |
+| Executor | Validates the arguments and executes the tool |
+| Memory | Stores the complete interaction state |
+| Agent | Coordinates the complete workflow |
 
 ## Documentation
 
@@ -132,6 +258,12 @@ building-ai-agent/
 │   ├── Report Version 3 - Generic Parser.pdf
 │   └── Version 3.png
 │
+├── v04-planner/
+│   ├── building-ai-agent.ipynb
+│   ├── Relazione Versione 4 - Planner.pdf
+│   ├── Report Version 4 - Planner.pdf
+│   └── Version 4.png
+│
 ├── project-report-en.pdf
 ├── project-report-it.pdf
 ├── README.md
@@ -145,6 +277,8 @@ building-ai-agent/
 
 - Python 3
 - Jupyter Notebook or JupyterLab
+
+The notebooks use Python's standard library, so no external agent framework is required.
 
 Clone the repository:
 
@@ -161,6 +295,12 @@ jupyter notebook
 
 Then open the notebook contained in the version folder you want to study and run the cells in order.
 
+For example, to study the Planner:
+
+```text
+v04-planner/building-ai-agent.ipynb
+```
+
 ## Development approach
 
 The project follows one main principle:
@@ -176,12 +316,26 @@ Each completed version remains available as an independent learning resource.
 - [x] Base Agent
 - [x] Dedicated Executor
 - [x] Generic Parser
-- [ ] Planning component
-- [ ] Managed memory
-- [ ] Tool registry
+- [x] Planner
+- [ ] Memory Manager
+- [ ] Tool Registry
 - [ ] LLM-based routing and parsing
-- [ ] Multi-step execution
+- [ ] Multi-step planning and execution
 - [ ] Python package structure
+
+## Current limitations
+
+The current version is intentionally simple:
+
+- the Router is rule-based;
+- the Planner is rule-based;
+- the Parser uses manual extraction rules;
+- memory is still a simple list;
+- there is no Tool Registry yet;
+- no LLM is used;
+- the agent executes one action at a time.
+
+These limitations will be addressed progressively in future versions.
 
 ## License
 
