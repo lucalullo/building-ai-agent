@@ -7,7 +7,21 @@
 
 A progressive educational project that shows how to build an AI agent step by step, from scratch, using pure Python.
 
-The project does not use an external LLM or an agent framework. Each version introduces one new architectural concept, making routing, planning, parsing, tool execution and memory easier to understand.
+The current versions do not use an external LLM or an agent framework. Each version introduces one new architectural concept, making routing, planning, parsing, tool execution and memory easier to understand before LLM-based components are introduced.
+
+## Project roadmap
+
+The complete project evolves through five main stages:
+
+1. core agent;
+2. modular execution;
+3. planning and managed memory;
+4. scalable intelligence with a Tool Registry and LLM integration;
+5. multi-step execution and professional project structure.
+
+Each stage introduces one architectural improvement while preserving the concepts developed in the previous versions.
+
+![Building AI Agent project roadmap infographic](infographic.png)
 
 ## Online notebook
 
@@ -70,12 +84,18 @@ Example:
 
 ## Project versions
 
-| Version | Main concept | Folder |
-|---|---|---|
-| Version 1 | Base Agent | [`v01-agent-base`](v01-agent-base/) |
-| Version 2 | Dedicated Executor | [`v02-executor`](v02-executor/) |
-| Version 3 | Generic Parser | [`v03-generic-parser`](v03-generic-parser/) |
-| Version 4 | Planner | [`v04-planner`](v04-planner/) |
+| Version | Main concept | Status | Folder |
+|---|---|---|---|
+| Version 1 | Base Agent | Completed | [`v01-agent-base`](v01-agent-base/) |
+| Version 2 | Dedicated Executor | Completed | [`v02-executor`](v02-executor/) |
+| Version 3 | Generic Parser | Completed | [`v03-generic-parser`](v03-generic-parser/) |
+| Version 4 | Planner | Completed | [`v04-planner`](v04-planner/) |
+| Version 5 | Memory Manager | Planned | - |
+| Version 6 | Tool Registry | Planned | - |
+| Version 7 | LLM Router | Planned | - |
+| Version 8 | LLM Parser | Planned | - |
+| Version 9 | Multi-step Agent | Planned | - |
+| Version 10 | Professional Project Structure | Planned | - |
 
 ## Version 1 - Base Agent
 
@@ -203,10 +223,6 @@ The agent state now also includes the execution plan:
 
 This makes the internal behavior of the agent more transparent and prepares the architecture for more advanced planning and multi-step execution.
 
-### Version 4 architecture
-
-![Version 4 Planner architecture](v04-planner/Version%204.png)
-
 Open the folder:
 
 [`v04-planner`](v04-planner/)
@@ -229,12 +245,16 @@ The repository includes a complete general report in Italian and English:
 - [Project report - English](project-report-en.pdf)
 - [Relazione del progetto - Italiano](project-report-it.pdf)
 
-Each version folder also contains:
+Each completed version folder contains:
 
 - a Jupyter Notebook;
 - an Italian technical report;
 - an English technical report;
-- an architecture diagram.
+- a version-specific architecture diagram.
+
+The repository also includes a general project roadmap infographic:
+
+- [Building AI Agent roadmap infographic](infographic.png)
 
 ## Repository structure
 
@@ -264,6 +284,7 @@ building-ai-agent/
 │   ├── Report Version 4 - Planner.pdf
 │   └── Version 4.png
 │
+├── infographic.png
 ├── project-report-en.pdf
 ├── project-report-it.pdf
 ├── README.md
@@ -278,7 +299,7 @@ building-ai-agent/
 - Python 3
 - Jupyter Notebook or JupyterLab
 
-The notebooks use Python's standard library, so no external agent framework is required.
+The current notebooks use Python's standard library, so no external agent framework is required.
 
 Clone the repository:
 
@@ -305,7 +326,7 @@ v04-planner/building-ai-agent.ipynb
 
 The project follows one main principle:
 
-> **One version, one concept.**
+> **One version, one concept, one architectural improvement.**
 
 Instead of immediately creating a complex system, the architecture evolves through small and understandable steps.
 
@@ -319,9 +340,10 @@ Each completed version remains available as an independent learning resource.
 - [x] Planner
 - [ ] Memory Manager
 - [ ] Tool Registry
-- [ ] LLM-based routing and parsing
-- [ ] Multi-step planning and execution
-- [ ] Python package structure
+- [ ] LLM Router
+- [ ] LLM Parser
+- [ ] Multi-step Agent
+- [ ] Professional Project Structure
 
 ## Current limitations
 
