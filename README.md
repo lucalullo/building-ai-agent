@@ -42,6 +42,7 @@ The current agent can:
 - extract and validate the arguments;
 - execute the selected tool;
 - handle unsupported requests safely;
+- manage memory through dedicated functions;
 - store the request, plan, action, arguments and result in memory.
 
 The included tools support greetings and basic arithmetic operations:
@@ -65,12 +66,16 @@ Generic Parser
       ↓
    Executor
       ↓
+Memory Manager
+      ↓
     Memory
       ↓
     Output
 ```
 
 The Planner creates an intermediate execution plan before parsing and execution.
+
+The Memory Manager saves, reads and clears memory through dedicated functions.
 
 Example:
 
@@ -90,7 +95,7 @@ Example:
 | Version 2 | Dedicated Executor | Completed | [`v02-executor`](v02-executor/) |
 | Version 3 | Generic Parser | Completed | [`v03-generic-parser`](v03-generic-parser/) |
 | Version 4 | Planner | Completed | [`v04-planner`](v04-planner/) |
-| Version 5 | Memory Manager | Planned | - |
+| Version 5 | Memory Manager | Completed | [`v05-memory-manager`](v05-memory-manager/) |
 | Version 6 | Tool Registry | Planned | - |
 | Version 7 | LLM Router | Planned | - |
 | Version 8 | LLM Parser | Planned | - |
@@ -227,6 +232,43 @@ Open the folder:
 
 [`v04-planner`](v04-planner/)
 
+## Version 5 - Memory Manager
+
+The fifth version introduces a dedicated Memory Manager component.
+
+The Agent no longer writes directly to the memory list. Instead, it delegates memory operations to dedicated functions:
+
+- `save_to_memory(state)`;
+- `get_memory()`;
+- `get_last_interaction()`;
+- `clear_memory()`.
+
+The complete flow becomes:
+
+```text
+User Request
+      ↓
+    Router
+      ↓
+   Planner
+      ↓
+Generic Parser
+      ↓
+   Executor
+      ↓
+Memory Manager
+      ↓
+    Memory
+      ↓
+    Output
+```
+
+The Memory Manager is still simple and uses a Python list, but memory operations are now separated from the Agent coordination logic.
+
+Open the folder:
+
+[`v05-memory-manager`](v05-memory-manager/)
+
 ## Component responsibilities
 
 | Component | Responsibility |
@@ -235,6 +277,7 @@ Open the folder:
 | Planner | Creates the execution plan |
 | Generic Parser | Extracts the required arguments |
 | Executor | Validates the arguments and executes the tool |
+| Memory Manager | Saves, reads and clears memory |
 | Memory | Stores the complete interaction state |
 | Agent | Coordinates the complete workflow |
 
@@ -284,6 +327,12 @@ building-ai-agent/
 │   ├── Report Version 4 - Planner.pdf
 │   └── Version 4.png
 │
+├── v05-memory-manager/
+│   ├── building-ai-agent.ipynb
+│   ├── Relazione Versione 5 - Memory Manager.pdf
+│   ├── Report Version 5 - Memory Manager.pdf
+│   └── Version 5.png
+│
 ├── infographic.png
 ├── project-report-en.pdf
 ├── project-report-it.pdf
@@ -316,10 +365,10 @@ jupyter notebook
 
 Then open the notebook contained in the version folder you want to study and run the cells in order.
 
-For example, to study the Planner:
+For example, to study the Memory Manager:
 
 ```text
-v04-planner/building-ai-agent.ipynb
+v05-memory-manager/building-ai-agent.ipynb
 ```
 
 ## Development approach
@@ -338,7 +387,7 @@ Each completed version remains available as an independent learning resource.
 - [x] Dedicated Executor
 - [x] Generic Parser
 - [x] Planner
-- [ ] Memory Manager
+- [x] Memory Manager
 - [ ] Tool Registry
 - [ ] LLM Router
 - [ ] LLM Parser
@@ -352,7 +401,7 @@ The current version is intentionally simple:
 - the Router is rule-based;
 - the Planner is rule-based;
 - the Parser uses manual extraction rules;
-- memory is still a simple list;
+- memory is still a simple list managed by the Memory Manager;
 - there is no Tool Registry yet;
 - no LLM is used;
 - the agent executes one action at a time.
