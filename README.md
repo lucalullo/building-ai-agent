@@ -7,7 +7,7 @@
 
 A progressive educational project that shows how to build an AI agent step by step, from scratch, using pure Python.
 
-The current versions do not use an external LLM or an agent framework. Each version introduces one new architectural concept, making routing, planning, parsing, tool execution and memory easier to understand before LLM-based components are introduced.
+The current version introduces a local pretrained language model for routing, without using an external inference API or an agent framework. Each version introduces one new architectural concept, making routing, planning, parsing, tool execution and memory easier to understand step by step.
 
 ## Project roadmap
 
@@ -44,6 +44,7 @@ The current agent can:
 - handle unsupported requests safely;
 - manage memory through dedicated functions;
 - centralize tool functions and metadata through a Tool Registry;
+- use a local LLM to select tools semantically from their names and descriptions;
 - store the request, plan, action, arguments and result in memory.
 
 The included tools support greetings and basic arithmetic operations:
@@ -59,7 +60,7 @@ The included tools support greetings and basic arithmetic operations:
 ```text
 User Request
       ↓
-    Router
+ LLM Router
       ↓
    Planner
       ↓
@@ -74,11 +75,13 @@ Memory Manager
     Output
 ```
 
+The LLM Router uses a small local pretrained language model to select the most appropriate tool from the names and descriptions stored in the Tool Registry.
+
 The Planner creates an intermediate execution plan before parsing and execution.
 
 The Memory Manager saves, reads and clears memory through dedicated functions.
 
-The Tool Registry provides a central source of tool functions and metadata for the Router, Planner, Generic Parser and Executor.
+The Tool Registry remains the central source of tool functions and metadata for the LLM Router, Planner, Generic Parser and Executor.
 
 Example:
 
@@ -100,7 +103,7 @@ Example:
 | Version 4 | Planner | Completed | [`v04-planner`](v04-planner/) |
 | Version 5 | Memory Manager | Completed | [`v05-memory-manager`](v05-memory-manager/) |
 | Version 6 | Tool Registry | Completed | [`v06-tool-registry`](v06-tool-registry/) |
-| Version 7 | LLM Router | Planned | - |
+| Version 7 | LLM Router | Completed | [`v07-llm-router`](v07-llm-router/) |
 | Version 8 | LLM Parser | Planned | - |
 | Version 9 | Multi-step Agent | Planned | - |
 | Version 10 | Professional Project Structure | Planned | - |
@@ -318,11 +321,69 @@ Open the folder:
 
 [`v06-tool-registry`](v06-tool-registry/)
 
+## Version 7 - LLM Router
+
+The seventh version introduces the first language-model-based component: the LLM Router.
+
+The Router no longer selects tools by scoring manually registered synonyms. Instead, it uses a small pretrained language model running locally inside the notebook:
+
+```python
+MODEL_NAME = "Qwen/Qwen2.5-0.5B-Instruct"
+```
+
+The Tool Registry remains the shared source of tool information. For routing, the LLM receives:
+
+- the user's request;
+- the registered tool names;
+- the registered tool descriptions.
+
+The model must return the name of the most appropriate tool, or `none` when no registered tool can handle the request.
+
+The main execution flow becomes:
+
+```text
+User Request
+      ↓
+ LLM Router
+      ↓
+   Planner
+      ↓
+Generic Parser
+      ↓
+   Executor
+      ↓
+Memory Manager
+      ↓
+    Memory
+      ↓
+    Output
+```
+
+Only the Router uses an LLM in this version.
+
+The Planner remains rule-based, the Generic Parser still extracts arguments with explicit rules, and the Executor, Memory Manager and Agent keep the same responsibilities as before.
+
+The registered synonyms remain stored in the Tool Registry for continuity with Version 6, but they are no longer used by the Router to make the routing decision.
+
+A semantic routing test such as:
+
+```python
+agent("Could you calculate the product of 2 and 3?")
+```
+
+selects `multiplication` even though `product` is not one of the registered routing synonyms. Unsupported requests such as a weather query correctly return no tool.
+
+The model runs locally after being downloaded from Hugging Face, so Version 7 does not use an external inference API.
+
+Open the folder:
+
+[`v07-llm-router`](v07-llm-router/)
+
 ## Component responsibilities
 
 | Component | Responsibility |
 |---|---|
-| Router | Selects the most appropriate tool |
+| LLM Router | Selects the most appropriate tool semantically using the local language model |
 | Planner | Creates the execution plan |
 | Generic Parser | Extracts the required arguments |
 | Executor | Validates the arguments and executes the tool |
@@ -389,6 +450,12 @@ building-ai-agent/
 │   ├── Report Version 6 - Tool Registry.pdf
 │   └── Version 6.png
 │
+├── v07-llm-router/
+│   ├── building-ai-agent.ipynb
+│   ├── Relazione Versione 7 - LLM Router.pdf
+│   ├── Report Version 7 - LLM Router.pdf
+│   └── Version 7.png
+│
 ├── infographic.png
 ├── project-report-en.pdf
 ├── project-report-it.pdf
@@ -403,8 +470,11 @@ building-ai-agent/
 
 - Python 3
 - Jupyter Notebook or JupyterLab
+- PyTorch
+- Transformers
+- Hugging Face Hub
 
-The current notebooks use Python's standard library, so no external agent framework is required.
+No external agent framework is required. Version 7 downloads a pretrained language model from Hugging Face and runs inference locally inside the notebook.
 
 Clone the repository:
 
@@ -421,10 +491,10 @@ jupyter notebook
 
 Then open the notebook contained in the version folder you want to study and run the cells in order.
 
-For example, to study the Memory Manager:
+For example, to study the LLM Router:
 
 ```text
-v05-memory-manager/building-ai-agent.ipynb
+v07-llm-router/building-ai-agent.ipynb
 ```
 
 ## Development approach
@@ -445,7 +515,7 @@ Each completed version remains available as an independent learning resource.
 - [x] Planner
 - [x] Memory Manager
 - [x] Tool Registry
-- [ ] LLM Router
+- [x] LLM Router
 - [ ] LLM Parser
 - [ ] Multi-step Agent
 - [ ] Professional Project Structure
@@ -454,12 +524,12 @@ Each completed version remains available as an independent learning resource.
 
 The current version is intentionally simple:
 
-- the Router is rule-based;
+- the LLM Router uses a small local model and can still make routing mistakes;
 - the Planner is rule-based;
-- the Parser uses manual extraction rules;
+- the Generic Parser still uses manual extraction rules;
 - memory is still a simple list managed by the Memory Manager;
 - the Tool Registry is still a simple in-memory Python dictionary and tool registration is manual;
-- no LLM is used;
+- only the Router uses an LLM;
 - the agent executes one action at a time.
 
 These limitations will be addressed progressively in future versions.
