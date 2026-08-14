@@ -7,7 +7,7 @@
 
 A progressive educational project that shows how to build an AI agent step by step, from scratch, using pure Python.
 
-The current version introduces a local pretrained language model for routing, without using an external inference API or an agent framework. Each version introduces one new architectural concept, making routing, planning, parsing, tool execution and memory easier to understand step by step.
+The current version completes the original roadmap with multi-step execution. A small local pretrained language model is used for both semantic tool routing and argument parsing, without using an external inference API or an agent framework. Each version introduces one new architectural concept, making routing, planning, parsing, tool execution and memory easier to understand step by step.
 
 ## Project roadmap
 
@@ -17,7 +17,7 @@ The complete project evolves through five main stages:
 2. modular execution;
 3. planning and managed memory;
 4. scalable intelligence with a Tool Registry and LLM integration;
-5. multi-step execution and professional project structure.
+5. multi-step execution.
 
 Each stage introduces one architectural improvement while preserving the concepts developed in the previous versions.
 
@@ -34,18 +34,21 @@ An executable version of the project is available on Kaggle:
 The current agent can:
 
 - receive a natural-language request;
-- identify the user's intent;
-- select the most appropriate tool;
+- identify the user's intent semantically;
+- select the most appropriate tool through a local LLM Router;
 - create a simple execution plan;
-- explain why the selected tool should be used;
+- create multiple sequential steps for requests connected by `then`;
+- explain why each selected tool should be used;
 - determine which arguments are required;
-- extract and validate the arguments;
-- execute the selected tool;
+- extract arguments through a local LLM Parser;
+- understand numeric arguments expressed as words;
+- validate the extracted arguments;
+- execute the selected tools;
+- pass the result of one step to the next when the request refers to `the result`;
 - handle unsupported requests safely;
 - manage memory through dedicated functions;
 - centralize tool functions and metadata through a Tool Registry;
-- use a local LLM to select tools semantically from their names and descriptions;
-- store the request, plan, action, arguments and result in memory.
+- store the complete request, plan, execution steps and final result in memory.
 
 The included tools support greetings and basic arithmetic operations:
 
@@ -60,13 +63,13 @@ The included tools support greetings and basic arithmetic operations:
 ```text
 User Request
       ↓
- LLM Router
-      ↓
    Planner
       ↓
-Generic Parser
+Step 1 (LLM Router → LLM Parser → Executor)
       ↓
-   Executor
+Step 2 (LLM Router → LLM Parser → Executor)
+      ↓
+     ...
       ↓
 Memory Manager
       ↓
@@ -75,40 +78,52 @@ Memory Manager
     Output
 ```
 
-The LLM Router uses a small local pretrained language model to select the most appropriate tool from the names and descriptions stored in the Tool Registry.
+The Planner can split a sequential request into multiple steps and uses the LLM Router to select the most appropriate tool for each step.
 
-The Planner creates an intermediate execution plan before parsing and execution.
+The LLM Router uses a small local pretrained language model to select tools semantically from the names and descriptions stored in the Tool Registry.
+
+The LLM Parser uses the same local language model to extract the arguments required by the selected tool and returns them as structured JSON.
+
+The Agent executes the plan one step at a time. When a later step refers to `the result`, the previous step result is inserted into that request before parsing and execution.
 
 The Memory Manager saves, reads and clears memory through dedicated functions.
 
-The Tool Registry remains the central source of tool functions and metadata for the LLM Router, Planner, Generic Parser and Executor.
+The Tool Registry remains the central source of tool functions and metadata for the LLM Router, Planner, LLM Parser and Executor.
 
-Example:
+Example multi-step plan:
 
 ```python
-{
-    "tool": "addition",
-    "reason": "Add two numbers.",
-    "needs_arguments": ["a", "b"]
-}
+[
+    {
+        "request": "Add 2 and 3",
+        "tool": "addition",
+        "reason": "Add two numbers.",
+        "needs_arguments": ["a", "b"]
+    },
+    {
+        "request": "multiply the result by 4",
+        "tool": "multiplication",
+        "reason": "Multiply two numbers.",
+        "needs_arguments": ["a", "b"]
+    }
+]
 ```
 
 ## Project versions
 
 | Version | Main concept | Status | Folder |
 |---|---|---|---|
-| Version 1 | Base Agent | Completed | [`v01-agent-base`](v01-agent-base/) |
+| Version 1 | Agent Base | Completed | [`v01-agent-base`](v01-agent-base/) |
 | Version 2 | Dedicated Executor | Completed | [`v02-executor`](v02-executor/) |
 | Version 3 | Generic Parser | Completed | [`v03-generic-parser`](v03-generic-parser/) |
 | Version 4 | Planner | Completed | [`v04-planner`](v04-planner/) |
 | Version 5 | Memory Manager | Completed | [`v05-memory-manager`](v05-memory-manager/) |
 | Version 6 | Tool Registry | Completed | [`v06-tool-registry`](v06-tool-registry/) |
 | Version 7 | LLM Router | Completed | [`v07-llm-router`](v07-llm-router/) |
-| Version 8 | LLM Parser | Planned | - |
-| Version 9 | Multi-step Agent | Planned | - |
-| Version 10 | Professional Project Structure | Planned | - |
+| Version 8 | LLM Parser | Completed | [`v08-llm-parser`](v08-llm-parser/) |
+| Version 9 | Multi-Step Agent | Completed | [`v09-multi-step-agent`](v09-multi-step-agent/) |
 
-## Version 1 - Base Agent
+## Version 1 - Agent Base
 
 The first version introduces the complete basic agent flow:
 
@@ -379,18 +394,104 @@ Open the folder:
 
 [`v07-llm-router`](v07-llm-router/)
 
+## Version 8 - LLM Parser
+
+The eighth version introduces the LLM Parser.
+
+The Router continues to use the local pretrained language model introduced in Version 7 to select the most appropriate tool.
+
+The Parser now uses the same model to understand the user's request and extract the arguments required by the selected tool. The Tool Registry provides the selected tool description and required parameters.
+
+The main execution flow becomes:
+
+```text
+User Request
+      ↓
+ LLM Router
+      ↓
+   Planner
+      ↓
+ LLM Parser
+      ↓
+   Executor
+      ↓
+Memory Manager
+      ↓
+    Memory
+      ↓
+    Output
+```
+
+The LLM Parser returns structured arguments as JSON and can handle inputs that are difficult for fixed extraction rules, including numbers expressed as words.
+
+For example:
+
+```python
+agent("Multiply three by four.")
+```
+
+extracts the required numeric arguments and returns `12`.
+
+The Planner remains rule-based, while the Executor, Memory Manager and Agent keep the same responsibilities as before.
+
+Open the folder:
+
+[`v08-llm-parser`](v08-llm-parser/)
+
+## Version 9 - Multi-Step Agent
+
+The ninth version introduces multi-step execution and completes the original project roadmap.
+
+The Planner can now split a sequential request into multiple steps. Each step is routed independently, and the Agent executes the resulting plan one step at a time.
+
+A request such as:
+
+```python
+agent("Add 2 and 3, then multiply the result by 4.")
+```
+
+creates two steps. The first step returns `5`; the Agent then resolves `the result` as `5` in the second step and returns the final result `20`.
+
+The main execution flow becomes:
+
+```text
+User Request
+      ↓
+   Planner
+      ↓
+Step 1 (LLM Router → LLM Parser → Executor)
+      ↓
+Step 2 (LLM Router → LLM Parser → Executor)
+      ↓
+     ...
+      ↓
+Memory Manager
+      ↓
+    Memory
+      ↓
+    Output
+```
+
+The LLM Router and LLM Parser continue to use the same local pretrained language model. The Executor and Memory Manager remain unchanged.
+
+The complete interaction state now stores the original request, the multi-step plan, the state of each executed step and the final result.
+
+Open the folder:
+
+[`v09-multi-step-agent`](v09-multi-step-agent/)
+
 ## Component responsibilities
 
 | Component | Responsibility |
 |---|---|
 | LLM Router | Selects the most appropriate tool semantically using the local language model |
-| Planner | Creates the execution plan |
-| Generic Parser | Extracts the required arguments |
-| Executor | Validates the arguments and executes the tool |
+| Planner | Creates a single-step or multi-step execution plan |
+| LLM Parser | Extracts the required arguments using the same local language model |
+| Executor | Validates the arguments and executes the selected tool |
 | Memory Manager | Saves, reads and clears memory |
 | Tool Registry | Stores tool functions and metadata in one central structure |
-| Memory | Stores the complete interaction state |
-| Agent | Coordinates the complete workflow |
+| Memory | Stores the complete interaction state, including executed steps |
+| Agent | Coordinates and executes the complete workflow step by step |
 
 ## Documentation
 
@@ -417,7 +518,7 @@ building-ai-agent/
 ├── v01-agent-base/
 │   ├── building-ai-agent.ipynb
 │   ├── Relazione Versione 1 - Agent Base.pdf
-│   ├── Report Version 1 - Base Agent.pdf
+│   ├── Report Version 1 - Agent Base.pdf
 │   └── Version 1.png
 │
 ├── v02-executor/
@@ -456,6 +557,18 @@ building-ai-agent/
 │   ├── Report Version 7 - LLM Router.pdf
 │   └── Version 7.png
 │
+├── v08-llm-parser/
+│   ├── building-ai-agent.ipynb
+│   ├── Relazione Versione 8 - LLM Parser.pdf
+│   ├── Report Version 8 - LLM Parser.pdf
+│   └── Version 8.png
+│
+├── v09-multi-step-agent/
+│   ├── building-ai-agent.ipynb
+│   ├── Relazione Versione 9 - Multi-Step Agent.pdf
+│   ├── Report Version 9 - Multi-Step Agent.pdf
+│   └── Version 9.png
+│
 ├── infographic.png
 ├── project-report-en.pdf
 ├── project-report-it.pdf
@@ -474,7 +587,7 @@ building-ai-agent/
 - Transformers
 - Hugging Face Hub
 
-No external agent framework is required. Version 7 downloads a pretrained language model from Hugging Face and runs inference locally inside the notebook.
+No external agent framework is required. Versions 7, 8 and 9 download the pretrained language model from Hugging Face and run inference locally inside the notebook.
 
 Clone the repository:
 
@@ -491,10 +604,10 @@ jupyter notebook
 
 Then open the notebook contained in the version folder you want to study and run the cells in order.
 
-For example, to study the LLM Router:
+For example, to study the final multi-step architecture:
 
 ```text
-v07-llm-router/building-ai-agent.ipynb
+v09-multi-step-agent/building-ai-agent.ipynb
 ```
 
 ## Development approach
@@ -509,30 +622,40 @@ Each completed version remains available as an independent learning resource.
 
 ## Roadmap
 
-- [x] Base Agent
+- [x] Agent Base
 - [x] Dedicated Executor
 - [x] Generic Parser
 - [x] Planner
 - [x] Memory Manager
 - [x] Tool Registry
 - [x] LLM Router
-- [ ] LLM Parser
-- [ ] Multi-step Agent
-- [ ] Professional Project Structure
+- [x] LLM Parser
+- [x] Multi-Step Agent
+
+Version 9 completes the original roadmap.
 
 ## Current limitations
 
-The current version is intentionally simple:
+The final version is intentionally compact and educational:
 
-- the LLM Router uses a small local model and can still make routing mistakes;
-- the Planner is rule-based;
-- the Generic Parser still uses manual extraction rules;
-- memory is still a simple list managed by the Memory Manager;
-- the Tool Registry is still a simple in-memory Python dictionary and tool registration is manual;
-- only the Router uses an LLM;
-- the agent executes one action at a time.
+- the LLM Router and LLM Parser use a small local model and can still make routing or parsing mistakes;
+- the Planner remains rule-based and splits sequential requests through the explicit `then` pattern;
+- passing a previous result to a later step relies on the phrase `the result`;
+- memory is still a simple Python list managed by the Memory Manager;
+- the Tool Registry is still an in-memory Python dictionary and tool registration is manual;
+- multi-step execution is sequential rather than a general-purpose reasoning or workflow engine.
 
-These limitations will be addressed progressively in future versions.
+These are intentional scope choices rather than unfinished roadmap items.
+
+## Project status
+
+Version 9 therefore closes the original roadmap rather than opening another required development phase.
+
+The project can remain finished in this form. Documentation, compatibility fixes or small maintenance updates may still be made when useful.
+
+At the same time, the repository is intentionally not declared permanently frozen. If a future concept is worth studying with the same **one version, one concept, one architectural improvement** philosophy, Building AI Agent may one day receive additional versions beyond Version 9.
+
+There is currently no required Version 10: any future continuation would be a new extension of an already completed project.
 
 ## License
 
